@@ -1,11 +1,10 @@
 import { useContext, useCallback } from "react";
 import { ViewerContext } from "../features/vrmViewer/viewerContext";
+import { getApiBase } from "@/utils/apiBase";
 
 export default function VrmViewer() {
   const { viewer } = useContext(ViewerContext);
-
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
-  const LOCAL_LUMI_VRM_URL = `${apiBase}/model/lumi.vrm`;
+  const LOCAL_LUMI_VRM_URL = `${getApiBase()}/model/lumi.vrm`;
 
   const canvasRef = useCallback(
     (canvas: HTMLCanvasElement) => {

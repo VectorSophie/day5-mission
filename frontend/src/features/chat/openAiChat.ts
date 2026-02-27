@@ -1,4 +1,5 @@
 import { Message } from "../messages/messages";
+import { getApiBase } from "@/utils/apiBase";
 
 export type BackendViseme = {
   phoneme: "a" | "i" | "u" | "e" | "o";
@@ -15,9 +16,8 @@ export type BackendChatResponse = {
   tool_used?: string | null;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
-
 export async function getBackendChatResponse(messages: Message[]): Promise<BackendChatResponse> {
+  const apiBase = getApiBase();
   const userMessages = messages.filter((msg) => msg.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1];
 
@@ -25,7 +25,7 @@ export async function getBackendChatResponse(messages: Message[]): Promise<Backe
     throw new Error("No user message found");
   }
 
-  const response = await fetch(`${API_BASE}/api/v1/chat/`, {
+  const response = await fetch(`${apiBase}/api/v1/chat/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -46,7 +46,8 @@ export async function getBackendChatResponse(messages: Message[]): Promise<Backe
 }
 
 export async function getAudioArrayBuffer(audioUrl: string): Promise<ArrayBuffer> {
-  const resolved = audioUrl.startsWith("http") ? audioUrl : `${API_BASE}${audioUrl}`;
+  const apiBase = getApiBase();
+  const resolved = audioUrl.startsWith("http") ? audioUrl : `${apiBase}${audioUrl}`;
   const response = await fetch(resolved);
   if (!response.ok) {
     throw new Error(`Audio fetch failed: ${response.status}`);

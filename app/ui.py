@@ -12,6 +12,7 @@ FastAPI에 마운트되어 /ui 경로에서 서비스됩니다.
     - 로컬: http://localhost:8000/ui
 """
 
+import json
 import re
 import uuid
 
@@ -192,6 +193,47 @@ footer { display: none !important; }
         0 8px 32px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
     overflow: hidden;
+}
+
+.layout-row {
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.avatar-column {
+    min-height: 620px;
+}
+
+.avatar-panel {
+    height: 100%;
+    min-height: 620px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.avatar-title {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+#lumi-avatar-canvas {
+    width: 100%;
+    flex: 1;
+    border-radius: 16px;
+    background: radial-gradient(circle at 30% 30%, rgba(78, 202, 255, 0.2), rgba(16, 12, 48, 0.8));
+}
+
+.avatar-status {
+    margin-top: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
 }
 
 /* ===== 채팅창 스타일 ===== */
@@ -453,14 +495,134 @@ button.copy {
         padding: 0.3rem 0.7rem;
     }
 }
-"""
 
-# 테마 설정
-THEME = gr.themes.Base(
-    primary_hue="pink",
-    secondary_hue="purple",
-    neutral_hue="slate",
-)
+/* ===== Upstage ChatVRM-inspired flat chat mode ===== */
+.gradio-container {
+    background: linear-gradient(180deg, #eef3ff 0%, #f8fbff 100%) !important;
+    animation: none !important;
+}
+
+.gradio-container::before,
+.gradio-container::after {
+    display: none !important;
+}
+
+.header-container {
+    padding: 1.1rem 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.header-container h1 {
+    animation: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    font-size: 1.95rem !important;
+}
+
+.header-container p {
+    color: #4b5563 !important;
+}
+
+.avatar-panel,
+.chat-container {
+    background: #ffffff !important;
+    border: 1px solid #dce5f2 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08) !important;
+    backdrop-filter: none !important;
+}
+
+.chatbot .messages {
+    padding: 1rem 1.25rem !important;
+}
+
+.chatbot .message-bubble {
+    max-width: 74% !important;
+    background: #ffffff !important;
+    border: 1px solid #d9e2ef !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    padding: 0.75rem 0.9rem !important;
+}
+
+.chatbot .message-row.user-row .message-bubble {
+    border-top: 4px solid #4f7cff !important;
+    border-color: #bfdbfe !important;
+    border-top-color: #4f7cff !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border-radius: 10px 10px 4px 10px !important;
+}
+
+.chatbot .message-row.bot-row .message-bubble {
+    border-top: 4px solid #8b5cf6 !important;
+    border-color: #d8c8ff !important;
+    border-top-color: #8b5cf6 !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border-radius: 10px 10px 10px 4px !important;
+}
+
+.chatbot .message-bubble p,
+.chatbot .message-bubble span,
+.chatbot .message-bubble {
+    color: inherit !important;
+}
+
+.input-row {
+    background: #ffffff !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+.input-row textarea,
+.input-row input[type="text"],
+textarea,
+input[type="text"],
+.textbox textarea {
+    background: #ffffff !important;
+    border: 1px solid #cfd9ea !important;
+    border-radius: 10px !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+}
+
+.send-btn {
+    background: #2563eb !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+.send-btn:hover {
+    transform: none !important;
+    background: #1d4ed8 !important;
+    box-shadow: none !important;
+}
+
+.quick-btn {
+    background: #ffffff !important;
+    border: 1px solid #d6dfef !important;
+    color: #374151 !important;
+    border-radius: 16px !important;
+}
+
+.quick-btn:hover {
+    background: #f3f6ff !important;
+    border-color: #c5d2eb !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.clear-btn {
+    border-color: #d1d5db !important;
+    color: #6b7280 !important;
+}
+
+.clear-btn:hover {
+    background: #f9fafb !important;
+    color: #374151 !important;
+}
+
+"""
 
 # OG 이미지용 BASE_URL (상대 경로 사용)
 BASE_URL = ""
@@ -473,6 +635,7 @@ META_TAGS = f"""
 <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="apple-touch-icon" href="/static/favicon.svg">
+<link rel="manifest" href="/static/manifest.json">
 
 <!-- Primary Meta Tags -->
 <meta name="title" content="루미(LUMI) - 버추얼 아이돌 AI 에이전트">
@@ -493,6 +656,17 @@ META_TAGS = f"""
 <meta property="twitter:title" content="루미(LUMI) - 버추얼 아이돌 AI 에이전트">
 <meta property="twitter:description" content="버추얼 아이돌 루미와 대화하고, 스케줄 확인하고, 팬레터도 보내보세요!">
 <meta property="twitter:image" content="{BASE_URL}/static/og-image.png">
+
+<style>{CUSTOM_CSS}</style>
+<script type="module" src="/static/lumi-avatar.js"></script>
+"""
+
+AVATAR_VIEW = """
+<div class="avatar-panel">
+  <div class="avatar-title">LUMI 3D</div>
+  <canvas id="lumi-avatar-canvas"></canvas>
+  <div id="lumi-avatar-status" class="avatar-status">Model loading...</div>
+</div>
 """
 
 
@@ -512,7 +686,11 @@ def create_chat_handler():
     # Direct Call - stream_with_status 직접 호출 (노드 상태 + 토큰)
     from app.api.routes.chat import stream_with_status
 
-    async def chat_with_lumi_stream(message: str, history: list, session_id: str):
+    async def chat_with_lumi_stream(
+        message: str,
+        history: list[dict[str, object]],
+        session_id: str,
+    ):
         """
         진행 상태 + 토큰 스트리밍으로 루미와 대화합니다. (Direct Call)
 
@@ -537,7 +715,15 @@ def create_chat_handler():
             # Direct Call - stream_with_status 함수 직접 호출
             current_response = ""
 
-            async for status, token, final, tool_used in stream_with_status(
+            async for (
+                status,
+                token,
+                final,
+                tool_used,
+                _emotion,
+                _audio_url,
+                _visemes,
+            ) in stream_with_status(
                 message=message,
                 session_id=session_id,
                 user_id=None,
@@ -590,7 +776,11 @@ def create_chat_handler_sse(api_base_url: str = "http://localhost:8000"):
 
     import httpx
 
-    async def chat_with_lumi_sse(message: str, history: list, session_id: str):
+    async def chat_with_lumi_sse(
+        message: str,
+        history: list[dict[str, object]],
+        session_id: str,
+    ):
         """
         SSE로 루미와 대화합니다. (HTTP 방식)
 
@@ -731,12 +921,6 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
     #
     # ===========================================
 
-    # ✅ 방식 1: Direct Call (마운트 구조에서는 이것 사용!)
-    chat_with_lumi = create_chat_handler()
-
-    # 🔄 방식 2: SSE (Gradio를 별도 프로세스로 실행할 때만!)
-    # chat_with_lumi = create_chat_handler_sse(api_base_url)
-
     # 🔧 세션 ID 생성 헬퍼 함수
     def generate_session_id() -> str:
         """브라우저 탭마다 고유한 세션 ID 생성"""
@@ -746,15 +930,12 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
 
     with gr.Blocks(
         title="루미(LUMI) - 버추얼 아이돌 AI 에이전트",
-        head=META_TAGS,
         analytics_enabled=False,
     ) as demo:
-        # CSS 직접 삽입 (마운트 시에도 적용되도록)
-        gr.HTML(f"<style>{CUSTOM_CSS}</style>")
-
         # 🔧 수정: gr.State로 사용자별 세션 ID 관리
         # 페이지 로드 시 고유한 세션 ID가 생성되어 각 탭/사용자가 격리됨
         session_state = gr.State(generate_session_id)
+        avatar_payload = gr.Textbox(value="", visible=False, elem_id="avatar-payload")
 
         # 헤더
         gr.HTML(
@@ -766,33 +947,34 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
             """
         )
 
-        # 채팅 컨테이너
-        with gr.Column(elem_classes="chat-container"):
-            # 채팅 인터페이스
-            chatbot = gr.Chatbot(
-                label="루미와 대화",
-                height=450,
-                elem_classes="chatbot",
-                avatar_images=(
-                    None,
-                    "https://api.dicebear.com/9.x/adventurer/svg?seed=Lumi&hair=long16&hairColor=f06292&skinColor=fce4ec&backgroundColor=ff6b9d&eyes=variant01&eyebrows=variant01&mouth=variant01",
-                ),
-            )
+        with gr.Row(elem_classes="layout-row"):
+            with gr.Column(scale=2, elem_classes="avatar-column"):
+                gr.HTML(AVATAR_VIEW)
 
-            # 입력 영역
-            with gr.Row(elem_classes="input-row"):
-                msg = gr.Textbox(
-                    placeholder="루미에게 메시지를 보내세요... 💭",
-                    scale=4,
-                    show_label=False,
-                    container=False,
+            with gr.Column(scale=3, elem_classes="chat-container"):
+                chatbot = gr.Chatbot(
+                    label="루미와 대화",
+                    height=450,
+                    elem_classes="chatbot",
+                    avatar_images=(
+                        None,
+                        "https://api.dicebear.com/9.x/adventurer/svg?seed=Lumi&hair=long16&hairColor=f06292&skinColor=fce4ec&backgroundColor=ff6b9d&eyes=variant01&eyebrows=variant01&mouth=variant01",
+                    ),
                 )
-                submit_btn = gr.Button(
-                    "전송 ✨",
-                    variant="primary",
-                    scale=1,
-                    elem_classes="send-btn",
-                )
+
+                with gr.Row(elem_classes="input-row"):
+                    msg = gr.Textbox(
+                        placeholder="루미에게 메시지를 보내세요... 💭",
+                        scale=4,
+                        show_label=False,
+                        container=False,
+                    )
+                    submit_btn = gr.Button(
+                        "전송 ✨",
+                        variant="primary",
+                        scale=1,
+                        elem_classes="send-btn",
+                    )
 
         # 빠른 응답 버튼
         gr.HTML(
@@ -809,25 +991,23 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
             clear_btn = gr.Button("🗑️ 대화 초기화", elem_classes="clear-btn")
 
         # 스트리밍 이벤트 핸들러
-        def add_user_message(message: str, chat_history: list) -> tuple:
-            """1단계: 사용자 메시지 먼저 표시"""
+        def add_user_message(
+            message: str,
+            chat_history: list[dict[str, object]],
+        ) -> tuple[str, list[dict[str, object]], str]:
             if not message.strip():
-                return "", chat_history
+                return "", chat_history, ""
             chat_history.append({"role": "user", "content": message})
-            return "", chat_history
+            return "", chat_history, ""
 
-        async def get_bot_response_stream(chat_history: list, session_id: str):
-            """
-            스트리밍 봇 응답 생성
+        async def get_bot_response_stream(
+            chat_history: list[dict[str, object]],
+            session_id: str,
+        ):
+            from app.api.routes.chat import stream_with_status
 
-                chat_with_lumi가 응답을 yield할 때마다 채팅창 업데이트.
-                - 먼저 "🔀 루미 생각 중..." 표시
-                - 토큰이 오면 응답으로 대체
-
-                🔧 수정: session_id를 파라미터로 받아 사용자별 격리
-            """
             if not chat_history:
-                yield chat_history
+                yield chat_history, gr.update()
                 return
 
             # 마지막 사용자 메시지 가져오기
@@ -850,32 +1030,70 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
                 last_user_msg = str(last_msg)
 
             if not last_user_msg:
-                yield chat_history
+                yield chat_history, gr.update()
                 return
 
-            # 스트리밍 응답 생성
             chat_history.append({"role": "assistant", "content": ""})
+            current_response = ""
+            async for (
+                status,
+                token,
+                final,
+                tool_used,
+                emotion,
+                audio_url,
+                visemes,
+            ) in stream_with_status(str(last_user_msg), session_id, None):
+                if status and not current_response:
+                    chat_history[-1] = {
+                        "role": "assistant",
+                        "content": sanitize_for_gradio_markdown(status),
+                    }
+                    yield chat_history, gr.update()
 
-            # 🔧 수정: session_id를 chat_with_lumi에 전달
-            async for partial_response in chat_with_lumi(
-                str(last_user_msg), chat_history, session_id
-            ):
-                # 마지막 assistant 메시지 업데이트
-                chat_history[-1] = {"role": "assistant", "content": partial_response}
-                yield chat_history
+                if token:
+                    current_response += token
+                    chat_history[-1] = {
+                        "role": "assistant",
+                        "content": sanitize_for_gradio_markdown(current_response),
+                    }
+                    yield chat_history, gr.update()
+
+                if final:
+                    final_content = final
+                    if tool_used:
+                        final_content += f"\n\n✨ _{tool_used}_"
+                    chat_history[-1] = {
+                        "role": "assistant",
+                        "content": sanitize_for_gradio_markdown(final_content),
+                    }
+                    payload = json.dumps(
+                        {
+                            "text": final,
+                            "emotion": emotion,
+                            "audio_url": audio_url,
+                            "visemes": [item.model_dump() for item in visemes or []],
+                        },
+                        ensure_ascii=False,
+                    )
+                    yield chat_history, payload
 
         # 전송 이벤트 - 스트리밍 체이닝
         # 🔧 수정: session_state 추가 및 concurrency_limit=None으로 병렬 처리 허용
-        msg.submit(add_user_message, [msg, chatbot], [msg, chatbot]).then(
+        msg.submit(
+            add_user_message, [msg, chatbot], [msg, chatbot, avatar_payload]
+        ).then(
             get_bot_response_stream,
             [chatbot, session_state],
-            [chatbot],
+            [chatbot, avatar_payload],
             concurrency_limit=None,  # 🔧 여러 요청 병렬 처리 허용
         )
-        submit_btn.click(add_user_message, [msg, chatbot], [msg, chatbot]).then(
+        submit_btn.click(
+            add_user_message, [msg, chatbot], [msg, chatbot, avatar_payload]
+        ).then(
             get_bot_response_stream,
             [chatbot, session_state],
-            [chatbot],
+            [chatbot, avatar_payload],
             concurrency_limit=None,  # 🔧 여러 요청 병렬 처리 허용
         )
 
@@ -886,11 +1104,11 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
         btn4.click(lambda: "신나는 노래 추천해줘", outputs=msg)
 
         # 🔧 수정: 클리어 시 새 세션 ID 생성 (대화 히스토리 초기화와 함께)
-        def clear_chat():
+        def clear_chat() -> tuple[list[dict[str, object]], str, str]:
             """대화 초기화 및 새 세션 ID 생성"""
             new_session_id = generate_session_id()
-            return [], new_session_id
+            return [], new_session_id, ""
 
-        clear_btn.click(clear_chat, outputs=[chatbot, session_state])
+        clear_btn.click(clear_chat, outputs=[chatbot, session_state, avatar_payload])
 
     return demo

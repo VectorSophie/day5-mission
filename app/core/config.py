@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     # 서버 포트
     port: int = 8000
 
+    tts_provider: Literal["none", "edge", "elevenlabs"] = "elevenlabs"
+    edge_tts_voice: str = "ko-KR-SunHiNeural"
+    eleven_api_key: str = ""
+    eleven_voice_name: str = "Jjeong - Warm, Calm and Measured"
+    eleven_model_id: str = "eleven_multilingual_v2"
+
     # pydantic-settings 설정
     model_config = SettingsConfigDict(
         # .env 파일 경로

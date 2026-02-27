@@ -94,17 +94,7 @@ class RAGRepository:
             query_embedding = await self.embeddings.aembed_query(query)
 
             # Step 2: Supabase RPC로 유사 문서 검색
-            # filter_status 파라미터 추가
-            result = self.supabase.rpc(
-                "match_documents",
-                {
-                    "query_embedding": query_embedding,
-                    "match_count": k,
-                    "filter_status": filter_status,  # 필터링!
-                },
-            ).execute()
-
-            docs = result.data or []
+            docs = self._search_by_rpc_with_fallback(query_embedding, k, filter_status)
 
             # 결과 로깅 (디버깅용)
             for doc in docs:
@@ -120,6 +110,58 @@ class RAGRepository:
         except Exception as e:
             logger.error(f"RAG 검색 실패: {e}")
             return []
+
+    def _search_by_rpc_with_fallback(
+        self,
+        query_embedding: list[float],
+        k: int,
+        filter_status: Literal["active", "deprecated", "all"],
+    ) -> list[dict]:
+        candidates = [
+            {
+                "query_embedding": query_embedding,
+                "match_count": k,
+                "filter_status": filter_status,
+            },
+            {
+                "query_embedding": query_embedding,
+                "match_count": k,
+            },
+            {
+                "query_embedding": query_embedding,
+                "match_count": k,
+                "match_threshold": 0.0,
+            },
+        ]
+
+        last_error: Exception | None = None
+        for idx, params in enumerate(candidates):
+            try:
+                result = self.supabase.rpc("match_documents", params).execute()
+                docs = result.data or []
+
+                if idx > 0 and filter_status != "all":
+                    docs = [
+                        doc
+                        for doc in docs
+                        if str(doc.get("metadata", {}).get("status", ""))
+                        == filter_status
+                    ]
+
+                return docs[:k]
+            except Exception as exc:
+                last_error = exc
+                msg = str(exc)
+                if "PGRST202" in msg:
+                    logger.warning(
+                        "match_documents RPC 시그니처 불일치(PGRST202). 다른 파라미터 조합으로 재시도합니다."
+                    )
+                    continue
+                raise
+
+        if last_error:
+            raise last_error
+        return []
 
     async def search_without_filter(self, query: str, k: int = 3) -> list[dict]:
         """

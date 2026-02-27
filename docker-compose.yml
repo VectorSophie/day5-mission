@@ -46,6 +46,11 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       LLM_MODEL: ${LLM_MODEL:-solar-pro2}
+      TTS_PROVIDER: ${TTS_PROVIDER:-elevenlabs}
+      ELEVEN_API_KEY: ${ELEVEN_API_KEY:-}
+      ELEVEN_VOICE_NAME: ${ELEVEN_VOICE_NAME:-Jjeong - Warm, Calm and Measured}
+      ELEVEN_MODEL_ID: ${ELEVEN_MODEL_ID:-eleven_multilingual_v2}
+      EDGE_TTS_VOICE: ${EDGE_TTS_VOICE:-ko-KR-SunHiNeural}
       UPSTAGE_API_KEY: ${UPSTAGE_API_KEY:-}
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_KEY: ${SUPABASE_KEY:-}

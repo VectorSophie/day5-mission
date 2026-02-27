@@ -39,7 +39,7 @@ from loguru import logger
 
 from app.api.routes import api_router
 from app.core.config import settings
-from app.ui import create_demo
+from app.ui import META_TAGS, create_demo
 
 # ===== 로깅 설정 =====
 # loguru를 사용하여 구조화된 로깅 설정
@@ -173,11 +173,15 @@ static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+model_dir = Path(__file__).parent.parent / "model"
+if model_dir.exists():
+    app.mount("/model", StaticFiles(directory=str(model_dir)), name="model")
+
 
 # ===== Gradio UI 마운트 =====
 # /ui 경로에서 Gradio 채팅 인터페이스 제공
 gradio_app = create_demo()
-app = gr.mount_gradio_app(app, gradio_app, path="/ui")
+app = gr.mount_gradio_app(app, gradio_app, path="/ui", head=META_TAGS)
 
 
 # ===== 루트 엔드포인트 =====
@@ -193,8 +197,13 @@ async def favicon():
     return RedirectResponse(url="/static/favicon.svg")
 
 
+@app.get("/manifest.json", include_in_schema=False)
+async def manifest():
+    return RedirectResponse(url="/static/manifest.json")
+
+
 @app.get("/api", tags=["Root"])
-async def api_info() -> dict:
+async def api_info() -> dict[str, object]:
     """API 정보"""
     return {
         "message": "Lumi Agent API",

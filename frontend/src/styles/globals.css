@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  min-height: 100vh;
+  color: #dbe8ff;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(123, 228, 255, 0.18), transparent 40%),
+    radial-gradient(circle at 80% 15%, rgba(147, 163, 255, 0.2), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(102, 126, 234, 0.25), transparent 45%),
+    linear-gradient(180deg, #050814 0%, #0b1230 50%, #090f24 100%);
+  background-position: top center;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 30% 80%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 70% 35%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 90% 60%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(2px 2px at 55% 15%, rgba(124, 183, 255, 0.35), transparent),
+    radial-gradient(2px 2px at 15% 70%, rgba(123, 228, 255, 0.28), transparent);
+  opacity: 0.75;
+}
+
+@layer components {
+  .input-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #858585;
+    height: 2px;
+    width: 100%;
+    border-radius: 4px;
+  }
+  .input-range:focus,
+  .input-range:active {
+    outline: none;
+  }
+  .input-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: block;
+    border: 2px solid #93a3ff;
+    background-color: #0f1735;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+  }
+}
+
+@layer utilities {
+  .scroll-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scroll-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}

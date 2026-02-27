@@ -74,8 +74,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Eiurum jeonsanghwa
-        run: echo "IMAGE_NAME_LOWER=$(echo \"${{ env.IMAGE_NAME }}\" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Normalize image name
+        run: |
+          echo IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       # TODO 3: GHCR 로그인
       - name: Login to GHCR

@@ -11,7 +11,6 @@ import { MessageInputContainer } from "@/components/messageInputContainer";
 import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
 import { KoeiroParam, DEFAULT_KOEIRO_PARAM } from "@/features/constants/koeiroParam";
 import { getAudioArrayBuffer, getBackendChatResponse } from "@/features/chat/openAiChat";
-import { M_PLUS_2, Montserrat } from "next/font/google";
 import { Introduction } from "@/components/introduction";
 import { Menu } from "@/components/menu";
 import { Meta } from "@/components/meta";
@@ -19,18 +18,6 @@ import { ElevenLabsParam, DEFAULT_ELEVEN_LABS_PARAM } from "@/features/constants
 import { buildUrl } from "@/utils/buildUrl";
 import { websocketService } from '../services/websocketService';
 import { MessageMiddleOut } from "@/features/messages/messageMiddleOut";
-
-const m_plus_2 = M_PLUS_2({
-  variable: "--font-m-plus-2",
-  display: "swap",
-  preload: false,
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  display: "swap",
-  subsets: ["latin"],
-});
 
 type LLMCallbackResult = {
   processed: boolean;
@@ -206,7 +193,7 @@ export default function Home() {
   }, [handleSendChat, chatProcessing, isPlayingAudio, isAISpeaking]);
 
   return (
-    <div className={`${m_plus_2.variable} ${montserrat.variable}`}>
+    <div>
       <Meta />
       <Introduction
         openAiKey={openAiKey}

@@ -153,8 +153,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     # 개발 환경: 모든 origin 허용 (Gradio 포함)
-    # Production: 특정 도메인만 허용하도록 변경 필요
     allow_origins=["*"] if settings.debug else [],
+    allow_origin_regex=None if settings.debug else r"^https?://[^/]+:3000$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

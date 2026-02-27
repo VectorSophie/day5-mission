@@ -43,13 +43,11 @@ class RAGRepository:
         RAGRepository 초기화
         """
         self.embeddings = UpstageEmbeddings(
-            api_key=settings.upstage_api_key,
-            model="solar-embedding-1-large-passage"
+            api_key=settings.upstage_api_key, model="solar-embedding-1-large-passage"
         )
 
         self.supabase: Client = create_client(
-            settings.supabase_url,
-            settings.supabase_key
+            settings.supabase_url, settings.supabase_key
         )
 
         logger.info("RAGRepository 초기화 완료 (필터링 지원)")
@@ -102,8 +100,8 @@ class RAGRepository:
                 {
                     "query_embedding": query_embedding,
                     "match_count": k,
-                    "filter_status": filter_status  # 필터링!
-                }
+                    "filter_status": filter_status,  # 필터링!
+                },
             ).execute()
 
             docs = result.data or []
@@ -169,11 +167,18 @@ class RAGRepository:
         """
         try:
             if filter_status == "all":
-                result = self.supabase.table("documents").select("id", count="exact").execute()
+                result = (
+                    self.supabase.table("documents")
+                    .select("id", count="exact")
+                    .execute()
+                )
             else:
-                result = self.supabase.table("documents").select("id", count="exact").eq(
-                    "metadata->>status", filter_status
-                ).execute()
+                result = (
+                    self.supabase.table("documents")
+                    .select("id", count="exact")
+                    .eq("metadata->>status", filter_status)
+                    .execute()
+                )
 
             return result.count or 0
         except Exception as e:

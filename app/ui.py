@@ -498,36 +498,36 @@ META_TAGS = f"""
 
 def create_chat_handler():
     """
-스트리밍 채팅 핸들러 생성 (Direct Call 방식)
+    스트리밍 채팅 핸들러 생성 (Direct Call 방식)
 
-    HTTP 요청 대신 stream_with_status 함수를 직접 호출하여
-    네트워크(localhost/port) 문제 없이 동작합니다.
+        HTTP 요청 대신 stream_with_status 함수를 직접 호출하여
+        네트워크(localhost/port) 문제 없이 동작합니다.
 
-    진행 상태 + 토큰 스트리밍:
-        - 노드 상태: "🔀 루미 생각 중..." 채팅창에 표시
-        - 토큰 스트리밍: 상태가 토큰으로 대체됨
+        진행 상태 + 토큰 스트리밍:
+            - 노드 상태: "🔀 루미 생각 중..." 채팅창에 표시
+            - 토큰 스트리밍: 상태가 토큰으로 대체됨
 
-    🔧 수정: 세션 ID를 파라미터로 받아 사용자별 격리
+        🔧 수정: 세션 ID를 파라미터로 받아 사용자별 격리
     """
     # Direct Call - stream_with_status 직접 호출 (노드 상태 + 토큰)
     from app.api.routes.chat import stream_with_status
 
     async def chat_with_lumi_stream(message: str, history: list, session_id: str):
         """
-    진행 상태 + 토큰 스트리밍으로 루미와 대화합니다. (Direct Call)
+        진행 상태 + 토큰 스트리밍으로 루미와 대화합니다. (Direct Call)
 
-        stream_with_status 함수를 직접 호출하여
-        진행 상태와 토큰을 실시간으로 받아 yield합니다.
+            stream_with_status 함수를 직접 호출하여
+            진행 상태와 토큰을 실시간으로 받아 yield합니다.
 
-        Args:
-            message: 사용자 메시지
-            history: 대화 히스토리
-            session_id: 사용자별 고유 세션 ID (gr.State로 관리)
+            Args:
+                message: 사용자 메시지
+                history: 대화 히스토리
+                session_id: 사용자별 고유 세션 ID (gr.State로 관리)
 
-        이벤트 흐름:
-            1. status: "🔀 루미 생각 중..." → 채팅창에 표시
-            2. token: 토큰이 오면 상태를 대체
-            3. final: 최종 응답
+            이벤트 흐름:
+                1. status: "🔀 루미 생각 중..." → 채팅창에 표시
+                2. token: 토큰이 오면 상태를 대체
+                3. final: 최종 응답
         """
         if not message.strip():
             yield "메시지를 입력해주세요!"
@@ -572,19 +572,19 @@ def create_chat_handler():
 
 def create_chat_handler_sse(api_base_url: str = "http://localhost:8000"):
     """
-SSE 스트리밍 채팅 핸들러 (HTTP 방식)
+    SSE 스트리밍 채팅 핸들러 (HTTP 방식)
 
-    FastAPI의 /chat/stream 엔드포인트를 SSE로 호출합니다.
-    프론트엔드와 백엔드가 분리된 실무 환경에서 사용하는 방식입니다.
+        FastAPI의 /chat/stream 엔드포인트를 SSE로 호출합니다.
+        프론트엔드와 백엔드가 분리된 실무 환경에서 사용하는 방식입니다.
 
-    ⚠️ 주의:
-        - localhost 연결 문제가 있을 수 있음 (Docker 등)
-        - 같은 프로세스면 Direct Call 방식이 더 간단함
+        ⚠️ 주의:
+            - localhost 연결 문제가 있을 수 있음 (Docker 등)
+            - 같은 프로세스면 Direct Call 방식이 더 간단함
 
-    🔧 수정: 세션 ID를 파라미터로 받아 사용자별 격리
+        🔧 수정: 세션 ID를 파라미터로 받아 사용자별 격리
 
-    Args:
-        api_base_url: FastAPI 서버 주소 (기본값: http://localhost:8000)
+        Args:
+            api_base_url: FastAPI 서버 주소 (기본값: http://localhost:8000)
     """
     import json
 
@@ -592,23 +592,23 @@ SSE 스트리밍 채팅 핸들러 (HTTP 방식)
 
     async def chat_with_lumi_sse(message: str, history: list, session_id: str):
         """
-    SSE로 루미와 대화합니다. (HTTP 방식)
+        SSE로 루미와 대화합니다. (HTTP 방식)
 
-        /chat/stream 엔드포인트를 호출하여 SSE 이벤트를 수신합니다.
-        실무에서 프론트/백엔드 분리 시 이 방식을 사용합니다.
+            /chat/stream 엔드포인트를 호출하여 SSE 이벤트를 수신합니다.
+            실무에서 프론트/백엔드 분리 시 이 방식을 사용합니다.
 
-        Args:
-            message: 사용자 메시지
-            history: 대화 히스토리
-            session_id: 사용자별 고유 세션 ID (gr.State로 관리)
+            Args:
+                message: 사용자 메시지
+                history: 대화 히스토리
+                session_id: 사용자별 고유 세션 ID (gr.State로 관리)
 
-        SSE 이벤트 타입:
-            - thinking: 노드 진행 상황 ("router", "tool", "response")
-            - token: LLM 토큰 (글자 단위)
-            - tool: Tool 실행 결과
-            - response: 최종 응답
-            - error: 에러 발생
-            - done: 스트리밍 종료
+            SSE 이벤트 타입:
+                - thinking: 노드 진행 상황 ("router", "tool", "response")
+                - token: LLM 토큰 (글자 단위)
+                - tool: Tool 실행 결과
+                - response: 최종 응답
+                - error: 에러 발생
+                - done: 스트리밍 종료
         """
         if not message.strip():
             yield "메시지를 입력해주세요!"
@@ -818,13 +818,13 @@ def create_demo(api_base_url: str | None = None) -> gr.Blocks:
 
         async def get_bot_response_stream(chat_history: list, session_id: str):
             """
-        스트리밍 봇 응답 생성
+            스트리밍 봇 응답 생성
 
-            chat_with_lumi가 응답을 yield할 때마다 채팅창 업데이트.
-            - 먼저 "🔀 루미 생각 중..." 표시
-            - 토큰이 오면 응답으로 대체
+                chat_with_lumi가 응답을 yield할 때마다 채팅창 업데이트.
+                - 먼저 "🔀 루미 생각 중..." 표시
+                - 토큰이 오면 응답으로 대체
 
-            🔧 수정: session_id를 파라미터로 받아 사용자별 격리
+                🔧 수정: session_id를 파라미터로 받아 사용자별 격리
             """
             if not chat_history:
                 yield chat_history

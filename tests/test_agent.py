@@ -155,7 +155,6 @@ class TestToolExecutor:
         assert "temperature" in result["data"]
         assert result.get("mock") is True
 
-
     @pytest.mark.asyncio
     async def test_unknown_tool(self, executor):
         """알 수 없는 Tool 테스트"""

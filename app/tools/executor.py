@@ -116,9 +116,7 @@ class ToolExecutor:
                     return await self._get_schedule(tool_args)
 
                 case "send_fan_letter":
-                    return await self._send_fan_letter(
-                        tool_args, session_id, user_id
-                    )
+                    return await self._send_fan_letter(tool_args, session_id, user_id)
 
                 case "recommend_song":
                     return await self._recommend_song(tool_args)

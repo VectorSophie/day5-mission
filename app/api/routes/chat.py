@@ -47,7 +47,9 @@ async def chat(request: ChatRequest) -> ChatResponse:
             -d '{"message": "오늘 방송 언제야?", "session_id": "user123"}'
         ```
     """
-    logger.info(f"📩 채팅 요청: session={request.session_id}, message={request.message[:50]}...")
+    logger.info(
+        f"📩 채팅 요청: session={request.session_id}, message={request.message[:50]}..."
+    )
 
     try:
         # Step 1: LangGraph 그래프 가져오기
@@ -95,6 +97,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
             status_code=500,
             detail=f"에이전트 처리 중 오류가 발생했습니다: {str(e)}",
         )
+
 
 # SSE 스트리밍 - Helper 함수
 async def stream_with_status(
@@ -153,7 +156,9 @@ async def stream_with_status(
 
     # 핵심: 두 모드 동시 사용(updates + messages)
     # stream_mode가 리스트일 때: (mode_name, event) 튜플로 반환됨
-    async for mode, event in graph.astream(initial_state, stream_mode=["updates", "messages"]):
+    async for mode, event in graph.astream(
+        initial_state, stream_mode=["updates", "messages"]
+    ):
         # 노드 스트리밍 (stream_mode="updates") : 노드가 완료될 때마다 이벤트 발생
         if mode == "updates":
             # event = {"node_name": {출력 상태}}
@@ -260,6 +265,3 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
-
-
-

@@ -4,7 +4,7 @@
 Supabase에서 루미의 스케줄 데이터를 조회합니다.
 """
 
-from typing import Optional
+
 from loguru import logger
 
 from . import get_supabase_client
@@ -35,7 +35,7 @@ class ScheduleRepository:
         self,
         start_date: str,
         end_date: str,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
     ) -> list[dict]:
         """
         스케줄 목록을 조회합니다.

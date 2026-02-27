@@ -10,7 +10,8 @@ TypedDict를 사용하여 타입 안전하게 정의합니다.
     - Annotated[list, add_messages]를 사용하면 메시지가 자동으로 추가됨
 """
 
-from typing import TypedDict, Literal, Annotated
+from typing import Annotated, Literal, TypedDict
+
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 

@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field
-from typing import Optional, Literal, Any
-from datetime import datetime, timezone
 
 
 class ChatRequest(BaseModel):
@@ -20,7 +21,7 @@ class ChatRequest(BaseModel):
         examples=["user123", "session-abc-123"],
     )
 
-    user_id: Optional[str] = Field(
+    user_id: str | None = Field(
         default=None,
         max_length=100,
         description="사용자 식별자 (선택)",
@@ -33,7 +34,7 @@ class ChatResponse(BaseModel):
         description="루미의 응답 메시지",
     )
 
-    tool_used: Optional[str] = Field(
+    tool_used: str | None = Field(
         default=None,
         description="사용된 Tool 이름",
         examples=["get_schedule", "recommend_song", None],
@@ -45,7 +46,7 @@ class ChatResponse(BaseModel):
     )
 
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="응답 생성 시간 (UTC)",
     )
 
@@ -108,34 +109,34 @@ class StreamEvent(BaseModel):
         description="이벤트 타입",
     )
 
-    node: Optional[str] = Field(
+    node: str | None = Field(
         default=None,
         description="현재 실행 중인 노드 이름",
         examples=["router", "rag", "tool", "response"],
     )
 
-    content: Optional[str] = Field(
+    content: str | None = Field(
         default=None,
         description="텍스트 내용 (토큰 또는 최종 응답)",
     )
 
-    tool_name: Optional[str] = Field(
+    tool_name: str | None = Field(
         default=None,
         description="실행된 Tool 이름",
         examples=["get_schedule", "recommend_song"],
     )
 
-    tool_result: Optional[Any] = Field(
+    tool_result: Any | None = Field(
         default=None,
         description="Tool 실행 결과",
     )
 
-    tool_used: Optional[str] = Field(
+    tool_used: str | None = Field(
         default=None,
         description="최종 응답에서 사용된 Tool",
     )
 
-    error: Optional[str] = Field(
+    error: str | None = Field(
         default=None,
         description="에러 메시지",
     )

@@ -9,11 +9,11 @@ Production 환경에서 필수적인 헬스체크 API입니다.
     GET /health/ready    - 준비 상태 확인 (DB 연결 등)
 """
 
-from datetime import datetime, timezone
+import tomllib
+from collections.abc import Mapping
+from datetime import UTC, datetime
 from importlib import metadata
 from pathlib import Path
-from collections.abc import Mapping
-import tomllib
 from typing import cast
 
 from fastapi import APIRouter
@@ -51,7 +51,7 @@ async def get_health() -> dict[str, str]:
         "status": "healthy",
         "service": "lumi-agent",
         "environment": settings.environment,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "version": _get_version(),
     }
 
@@ -62,6 +62,6 @@ async def get_readiness() -> dict[str, str]:
         "status": "ready",
         "service": "lumi-agent",
         "environment": settings.environment,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "version": _get_version(),
     }

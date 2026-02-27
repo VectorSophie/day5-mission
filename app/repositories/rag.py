@@ -14,9 +14,10 @@ RAG(Retrieval-Augmented Generation)를 위한 문서 검색 Repository
 """
 
 from typing import Literal
-from loguru import logger
+
 from langchain_upstage import UpstageEmbeddings
-from supabase import create_client, Client
+from loguru import logger
+from supabase import Client, create_client
 
 from app.core.config import settings
 

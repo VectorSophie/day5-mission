@@ -8,14 +8,15 @@ LangGraph 에이전트를 호출하여 사용자 메시지를 처리합니다.
     POST /chat/stream        - SSE 스트리밍
 """
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from langchain_core.messages import HumanMessage, AIMessage, AIMessageChunk, BaseMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, HumanMessage
 from loguru import logger
 
-from app.schemas.chat import ChatRequest, ChatResponse, StreamEvent
 from app.graph import get_lumi_graph
+from app.schemas.chat import ChatRequest, ChatResponse, StreamEvent
 
 router = APIRouter()
 
@@ -256,7 +257,7 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no", 
+            "X-Accel-Buffering": "no",
         },
     )
 

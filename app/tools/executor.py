@@ -12,12 +12,12 @@ Tool 이름과 인자를 받아서 적절한 함수를 호출하고 결과를 �
 """
 
 import random
-from typing import Any, Optional
+from typing import Any
+
 from loguru import logger
 
-from app.repositories.schedule import ScheduleRepository
 from app.repositories.fan_letter import FanLetterRepository
-
+from app.repositories.schedule import ScheduleRepository
 
 # 🔶 Mock 데이터: 루미의 노래 목록
 LUMI_SONGS = {
@@ -86,7 +86,7 @@ class ToolExecutor:
         tool_name: str,
         tool_args: dict,
         session_id: str,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Tool을 실행합니다.
@@ -186,7 +186,7 @@ class ToolExecutor:
         self,
         args: dict,
         session_id: str,
-        user_id: Optional[str],
+        user_id: str | None,
     ) -> dict:
         """
         ✅ Real: Supabase에 팬레터 저장

@@ -4,7 +4,7 @@
 Supabase에 팬들의 메시지를 저장합니다.
 """
 
-from typing import Optional
+
 from loguru import logger
 
 from . import get_supabase_client
@@ -38,7 +38,7 @@ class FanLetterRepository:
         session_id: str,
         category: str,
         message: str,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
     ) -> str:
         """
         팬레터를 저장합니다.

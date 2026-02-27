@@ -1,16 +1,18 @@
 # scripts/ai_reviewer.py
 import os
-import sys
 import subprocess
-from langchain_upstage import ChatUpstage
+import sys
+
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_upstage import ChatUpstage
+
 
 def get_diff(target_branch="origin/main"):
     """Git diff를 가져옵니다."""
     try:
         # fetch를 먼저 수행하여 최신 상태 확인
         subprocess.run(["git", "fetch", "origin", "main"], check=True, capture_output=True)
-        
+
         # diff 생성
         result = subprocess.run(
             ["git", "diff", f"{target_branch}...HEAD"],

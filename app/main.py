@@ -140,7 +140,7 @@ app = FastAPI(
     - Supabase: 데이터베이스
 
     """,
-    version="0.5.0", 
+    version="0.5.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -203,7 +203,7 @@ async def api_info() -> dict:
         "endpoints": {
             "health": "/api/v1/health",
             "chat": "/api/v1/chat",
-            "chat_stream": "/api/v1/chat/stream",  
+            "chat_stream": "/api/v1/chat/stream",
         },
     }
 

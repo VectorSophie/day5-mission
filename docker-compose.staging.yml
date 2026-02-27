@@ -1,0 +1,10 @@
+# docker-compose.staging.yml
+# Staging 환경 전용 override 파일
+
+services:
+  lumi-agent:
+    env_file:
+      - .env.staging
+    environment:
+      ENVIRONMENT: staging
+      DEBUG: "false"

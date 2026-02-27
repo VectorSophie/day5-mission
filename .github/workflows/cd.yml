@@ -50,7 +50,8 @@ permissions:
 # 환경 변수
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/lumi-agent
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/lumi-agent
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/lumi-frontend
 
 jobs:
   # =========================================================
@@ -63,8 +64,8 @@ jobs:
     if: ${{ !inputs.rollback }}
 
     outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
-      image_digest: ${{ steps.build.outputs.digest }}
+      backend_image_digest: ${{ steps.backend_build.outputs.digest }}
+      frontend_image_digest: ${{ steps.frontend_build.outputs.digest }}
 
     steps:
       - name: Checkout code
@@ -74,9 +75,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Eiurum jeonsanghwa
+      - name: Normalize image names
         run: |
-          echo IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_BACKEND_LOWER=$(echo '${{ env.IMAGE_NAME_BACKEND }}' | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_NAME_FRONTEND_LOWER=$(echo '${{ env.IMAGE_NAME_FRONTEND }}' | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
 
       # TODO 3: GHCR 로그인
       - name: Login to GHCR
@@ -87,32 +89,54 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # 이미지 태그 생성
-      - name: Extract metadata
-        id: meta
+      - name: Extract backend metadata
+        id: backend_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND_LOWER }}
           tags: |
             type=sha,prefix=
             type=raw,value=latest
 
-      # TODO 4: 이미지 빌드 & Push
-      - name: Build and Push
-        id: build
+      - name: Extract frontend metadata
+        id: frontend_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND_LOWER }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and Push backend
+        id: backend_build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.backend_meta.outputs.tags }}
+          labels: ${{ steps.backend_meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push frontend
+        id: frontend_build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.frontend_meta.outputs.tags }}
+          labels: ${{ steps.frontend_meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Print image info
         run: |
           echo "📦 이미지 빌드 완료!"
-          echo "Tags: ${{ steps.meta.outputs.tags }}"
-          echo "Digest: ${{ steps.build.outputs.digest }}"
+          echo "Backend tags: ${{ steps.backend_meta.outputs.tags }}"
+          echo "Backend digest: ${{ steps.backend_build.outputs.digest }}"
+          echo "Frontend tags: ${{ steps.frontend_meta.outputs.tags }}"
+          echo "Frontend digest: ${{ steps.frontend_build.outputs.digest }}"
 
   # =========================================================
   # Job 2: EC2 배포 (Pull & Run)
@@ -141,8 +165,10 @@ jobs:
             # 환경 변수 설정
             REGISTRY="ghcr.io"
             IMAGE_NAME=$(echo "${{ github.repository }}/lumi-agent" | tr '[:upper:]' '[:lower:]')
+            FRONTEND_IMAGE_NAME=$(echo "${{ github.repository }}/lumi-frontend" | tr '[:upper:]' '[:lower:]')
             IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
             FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            FRONTEND_FULL_IMAGE="${REGISTRY}/${FRONTEND_IMAGE_NAME}:${IMAGE_TAG}"
             DEPLOY_DIR="/home/${{ secrets.EC2_USERNAME }}/lumi-agent"
 
             # 첫 배포 시 폴더 자동 생성
@@ -153,10 +179,8 @@ jobs:
 
             cd $DEPLOY_DIR
 
-            # docker-compose.yml 없으면 자동 생성
-            if [ ! -f "docker-compose.yml" ]; then
-              echo "📝 docker-compose.yml 생성 중..."
-              cat > docker-compose.yml << 'COMPOSE_EOF'
+            echo "📝 docker-compose.yml 생성 중..."
+            cat > docker-compose.yml << 'COMPOSE_EOF'
             services:
               lumi-agent:
                 image: ${LUMI_IMAGE:-ghcr.io/owner/repo/lumi-agent:latest}
@@ -172,8 +196,23 @@ jobs:
                   timeout: 10s
                   retries: 3
                   start_period: 10s
+              lumi-frontend:
+                image: ${FRONTEND_IMAGE:-ghcr.io/owner/repo/lumi-frontend:latest}
+                container_name: lumi-frontend
+                restart: unless-stopped
+                depends_on:
+                  - lumi-agent
+                ports:
+                  - "3000:3000"
+                environment:
+                  NEXT_PUBLIC_API_BASE: http://${{ secrets.EC2_HOST }}:8000
+                healthcheck:
+                  test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 20s
             COMPOSE_EOF
-            fi
 
             # .env 파일 생성 (GitHub Secrets에서 자동 주입)
             echo "📝 .env 파일 생성 중..."
@@ -202,7 +241,11 @@ jobs:
             if [ -f ".current_image" ]; then
               cp .current_image .previous_image
             fi
+            if [ -f ".current_frontend_image" ]; then
+              cp .current_frontend_image .previous_frontend_image
+            fi
             echo "${FULL_IMAGE}" > .current_image
+            echo "${FRONTEND_FULL_IMAGE}" > .current_frontend_image
 
             # Step 1: GHCR 로그인
             echo "🔐 GHCR 로그인 중..."
@@ -211,16 +254,18 @@ jobs:
             # Step 2: 이미지 Pull (빠름! 10~20초)
             echo "📦 이미지 Pull 중... (이미 빌드된 이미지)"
             docker pull ${FULL_IMAGE}
+            docker pull ${FRONTEND_FULL_IMAGE}
 
             # Step 3: 환경 변수로 이미지 전달
             export LUMI_IMAGE=${FULL_IMAGE}
+            export FRONTEND_IMAGE=${FRONTEND_FULL_IMAGE}
 
             # Step 4: 컨테이너 교체 (다운타임 최소화)
             echo "🔄 컨테이너 교체 중..."
             $DOCKER_COMPOSE up -d --force-recreate
 
             # Step 5: 헬스체크 (최대 60초 대기)
-            echo "⏳ 헬스체크 중..."
+            echo "⏳ 백엔드 헬스체크 중..."
             MAX_RETRIES=12
             RETRY_INTERVAL=5
             for i in $(seq 1 $MAX_RETRIES); do
@@ -235,14 +280,33 @@ jobs:
                 $DOCKER_COMPOSE logs --tail=100
 
                 # 자동 롤백 시도
-                if [ -f ".previous_image" ]; then
+                if [ -f ".previous_image" ] && [ -f ".previous_frontend_image" ]; then
                   echo "🔙 자동 롤백 시도..."
                   PREV_IMAGE=$(cat .previous_image)
+                  PREV_FRONTEND_IMAGE=$(cat .previous_frontend_image)
                   docker pull ${PREV_IMAGE}
+                  docker pull ${PREV_FRONTEND_IMAGE}
                   export LUMI_IMAGE=${PREV_IMAGE}
+                  export FRONTEND_IMAGE=${PREV_FRONTEND_IMAGE}
                   $DOCKER_COMPOSE up -d --force-recreate
-                  echo "⚠️ 이전 버전으로 롤백됨: ${PREV_IMAGE}"
+                  echo "⚠️ 이전 버전으로 롤백됨: ${PREV_IMAGE}, ${PREV_FRONTEND_IMAGE}"
                 fi
+                exit 1
+              fi
+              sleep $RETRY_INTERVAL
+            done
+
+            echo "⏳ 프론트엔드 헬스체크 중..."
+            for i in $(seq 1 $MAX_RETRIES); do
+              FRONT_STATUS=$(curl -sL -o /dev/null -w "%{http_code}" http://localhost:3000/ 2>/dev/null || echo "000")
+              if [ "$FRONT_STATUS" -eq 200 ]; then
+                echo "✅ 프론트엔드 정상 (HTTP $FRONT_STATUS)"
+                break
+              fi
+              echo "  시도 $i/$MAX_RETRIES (HTTP $FRONT_STATUS)..."
+              if [ "$i" -eq "$MAX_RETRIES" ]; then
+                echo "❌ 프론트엔드 헬스체크 실패!"
+                $DOCKER_COMPOSE logs --tail=100
                 exit 1
               fi
               sleep $RETRY_INTERVAL
@@ -252,7 +316,7 @@ jobs:
             docker image prune -af
 
             echo "================================"
-            echo "🎉 배포 완료: ${FULL_IMAGE}"
+            echo "🎉 배포 완료: ${FULL_IMAGE} + ${FRONTEND_FULL_IMAGE}"
 
       - name: Rollback to previous version
         if: ${{ inputs.rollback }}
@@ -279,18 +343,25 @@ jobs:
               echo "❌ 이전 버전 정보가 없습니다!"
               exit 1
             fi
+            if [ ! -f ".previous_frontend_image" ]; then
+              echo "❌ 이전 프론트엔드 버전 정보가 없습니다!"
+              exit 1
+            fi
 
             PREV_IMAGE=$(cat .previous_image)
-            echo "롤백 대상: ${PREV_IMAGE}"
+            PREV_FRONTEND_IMAGE=$(cat .previous_frontend_image)
+            echo "롤백 대상: ${PREV_IMAGE} + ${PREV_FRONTEND_IMAGE}"
 
             # GHCR 로그인
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # 이전 이미지 Pull
             docker pull ${PREV_IMAGE}
+            docker pull ${PREV_FRONTEND_IMAGE}
 
             # 환경 변수 설정 및 컨테이너 교체
             export LUMI_IMAGE=${PREV_IMAGE}
+            export FRONTEND_IMAGE=${PREV_FRONTEND_IMAGE}
             $DOCKER_COMPOSE up -d --force-recreate
 
             # 헬스체크 (retry 로직 추가)
@@ -301,6 +372,7 @@ jobs:
               if [ "$HTTP_STATUS" -eq 200 ]; then
                 echo "✅ 롤백 성공!"
                 echo "${PREV_IMAGE}" > .current_image
+                echo "${PREV_FRONTEND_IMAGE}" > .current_frontend_image
                 exit 0
               fi
               echo "  시도 $i/$MAX_RETRIES (HTTP $HTTP_STATUS)..."
@@ -327,8 +399,10 @@ jobs:
 
           # 빌드 결과
           if [ "${{ needs.build-and-push.result }}" == "success" ]; then
+            REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
             echo "### ✅ 빌드 성공" >> $GITHUB_STEP_SUMMARY
-            echo "- 이미지: \`ghcr.io/${{ github.repository }}/lumi-agent:$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Backend 이미지: \`ghcr.io/${REPO_LOWER}/lumi-agent:$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Frontend 이미지: \`ghcr.io/${REPO_LOWER}/lumi-frontend:$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.build-and-push.result }}" == "skipped" ]; then
             echo "### ⏭️ 빌드 스킵 (롤백 모드)" >> $GITHUB_STEP_SUMMARY
           else
